@@ -10,7 +10,17 @@
     var cCenterY = cHeight /2;
     var paddleStartPositionY = cCenterY - 125/2;
     var speed = 10;
-
+    var keysDown = {};
+    
+//    Event Listeners
+    
+    window.addEventListener("keydown", function(event){
+        keysDown[event.keyCode] = true;
+    });
+    
+    window.addEventListener("keyup", function(event){
+        delete keysDown[event.keyCode];
+    });
 
 //    Paddle and Players
     
@@ -27,25 +37,55 @@
         c.fillRect(this.x, this.y, this.width, this.height)
     };
     
+    Paddle.prototype.move = function (x, y){
+        this.y += y;
+        var yMax = canvas.height - this.height;
+        if(this.y < 0){
+            this.y = 0;
+        }else if(this.y > yMax){
+            this.y = yMax;
+        }
+    };
+    
     function Player(){
         this.paddle = new Paddle(50, 267.5, 10, 130, 10);
     }
     
     function Computer(){
-        this.paddle = new Paddle(910, 267.5, 10, 130, 10);
+        this.paddle = new Paddle(910, 267, 10, 130, 10);
     }
     
     Player.prototype.render = function() {
         this.paddle.render();
     }
     
-    Player.prototype.update = function() {    
-        this.paddle.render();
+    Player.prototype.update = function() {
+        for(var key in keysDown){
+            var value = Number(key);
+//            Down Arrow = 38, Up Arrow = 40
+            if(value == 38) {
+                this.paddle.move(0, -10)
+            }else if(value == 40){
+                this.paddle.move(0, 10)
+            }else{
+                alert("Press the UP ARROW for UP and the DOWN ARROW for DOWN to move your Paddle!")
+            }
+        }    
     };
     
     Computer.prototype.render = function() {
         this.paddle.render();
     }
+    
+    Computer.prototype.update = function(gameBall){
+        var paddleCenter = this.paddle.y + (this.paddle.height/2);
+        if(gameBall.y > paddleCenter){
+            this.paddle.move(0, 5);
+        }else if(gameBall.y < paddleCenter){
+            this.paddle.move(0, -5);
+        }else{    
+        }
+    };
     
 //    Ball
     
@@ -54,8 +94,8 @@
         this.y = y;
         this.width = 10;
         this.height = 10;
-        this.x_speed = -2; //Can accomdate speeds of 1,2,5,10,15
-        this.y_speed = 0; //Can accomodate speeds of 1, 2, 5, 10, 15
+        this.x_speed = 5; //Can accomdate speeds of 1,2,5,10,15
+        this.y_speed = 1; //Can accomodate speeds of 1, 2, 5, 10, 15
     };
     
     Ball.prototype.render = function(){
@@ -81,7 +121,6 @@
                 this.x_speed = -this.x_speed;
             }
         }
-        console.log(this.x)
     };
 
 //    Variables
@@ -89,29 +128,7 @@
     var player = new Player();
     var computer = new Computer();
     var ball = new Ball(cCenterX, 500);
-        
-
-    function myEventHandler(event){
-            if(event.keyCode == 84){
-                if(player.paddle.y >= 7.5){
-                    player.paddle.y -= 10;
-                    console.log(player.paddle.y);
-                }else{
-                    player.paddle.y -= 0;
-                }
-            }else if (event.keyCode == 71){
-                if(player.paddle.y < 527.5){
-                    player.paddle.y += 10;
-                    console.log(player.paddle.y);
-                }else{
-                    player.paddle.y += 0;
-                }
-            }else{
-                alert("Press the T for UP and G for DOWN to move your paddle!")
-            }
-        };
-    
-    
+            
     var step = function(){
         update();
         render();
@@ -120,7 +137,8 @@
 
     var update = function(){
         player.update();
-        ball.update(player.paddle, computer.paddle);    
+        computer.update(ball);
+        ball.update(player.paddle, computer.paddle);
     };
     
     var render = function() {
@@ -139,7 +157,6 @@
 
     window.onload = function (){
         animate(step);
-        window.addEventListener("keydown", myEventHandler, false);
     };
     
 })();
